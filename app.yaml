@@ -1,0 +1,22 @@
+runtime: python313
+
+handlers:
+  - url: /style\.css
+    static_files: style.css
+    upload: style\.css
+    secure: always
+
+  - url: /script\.js
+    static_files: script.js
+    upload: script\.js
+    secure: always
+
+  - url: /(.*\.(png|jpg|jpeg|gif|webp|svg|ico))
+    static_files: \1
+    upload: (.*\.(png|jpg|jpeg|gif|webp|svg|ico))
+    secure: always
+
+  - url: /.*
+    static_files: index.html
+    upload: index\.html
+    secure: always

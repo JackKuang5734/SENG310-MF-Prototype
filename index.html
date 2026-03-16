@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Medium fidelity campus room navigation prototype">
+    <meta name="theme-color" content="#dddddd">
+    <title>Medium Fidelity Prototype</title>
+    <link rel="stylesheet" href ="style.css"> 
+    <!-- <script type="module" src="script.js"></script> -->
+</head>
+<body>
+    <main class="prototype-shell" style="align-items: center; justify-content: center; display: flex; flex-direction: column;">
+        <h1 class="prototype-title">Nav Vic-Gation Prototype</h1>
+
+        <section class="phone" aria-label="iPhone-sized prototype canvas">
+            <div class="map" id="mapContainer">
+                <div class="map-viewport" id="mapViewport">
+                    <div class="map-image campus-tone" id="mapImage">
+                        <img class="map-raster" id="mapRaster" src="https://drive.google.com/thumbnail?id=1TPt0M1FoUqwaQPDx0zrogkQfjuiyuCWo&sz=w2000" alt="Campus map">
+                    </div>
+                    <svg class="route-svg" id="routeOverlay" viewBox="0 0 1199 1274" preserveAspectRatio="none" aria-hidden="true">
+                        <path id="routePath" class="route-line"></path>
+                    </svg>
+                    <div class="pin" id="startPin" title="Current location"></div>
+                    <div class="destination" id="destinationStar">★</div>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                    <span class="bar-icon"></span>
+                    <span class="bar-icon"></span>
+                    <span class="bar-icon"></span>
+                    <span class="dot-icon"></span>
+                    <span class="battery"></span>
+                </div>
+            </div>
+
+            <div class="top-controls">
+                <div class="search-box">
+                    <span class="menu-icon" id="menuButton">☰</span>
+                    <input id="buildingInput" class="field-text" type="text" placeholder="Building.." autocomplete="off">
+                </div>
+                <div class="room-box">
+                    <input id="roomInput" class="field-text" type="text" placeholder="Room Code" autocomplete="off">
+                    <span class="search-icon" id="searchButton">⌕</span>
+                </div>
+            </div>
+
+            <div class="dropdown" id="buildingDropdown">
+                <div class="dropdown-list">
+                    <div class="dropdown-item" data-building="DTB"><small>David Turpin Building</small><strong>DTB</strong></div>
+                    <div class="dropdown-item" data-building="DSB"><small>David Strong Building</small><strong>DSB</strong></div>
+                    <div class="dropdown-item" data-building="CLE"><small>Clearihue Building</small><strong>CLE</strong></div>
+                    <div class="dropdown-item" data-building="ECS"><small>Eng-Comp Science Bdg</small><strong>ECS</strong></div>
+                    <div class="dropdown-item" data-building="ELW"><small>Engineering Lab Wing</small><strong>ELW</strong></div>
+                    <!-- <div class="dropdown-item" data-building="CSC"><small>Computer Science Building</small><strong>CSC</strong></div> -->
+                </div>
+            </div>
+
+            <div class="step-controls" id="stepControls"></div>
+
+            <aside class="info-card" id="infoCard">
+                <div class="info-header">
+                    <small>Room Information</small>
+                    <h2 id="infoTitle">ECS-315</h2>
+                    <p id="infoSubtitle">Advanced Programming Lab</p>
+                    <div class="info-header-actions">
+                        <button class="icon-btn" id="toggleInfo" type="button">☰</button>
+                        <button class="icon-btn" id="closeInfo" type="button">✕</button>
+                    </div>
+                </div>
+                <div class="info-body">
+                    <div class="details-content">
+                        <div class="meta-row">
+                            <span>📏 0.3 miles</span>
+                            <span>🚶 Multi-stage</span>
+                        </div>
+
+                        <div class="section-label">LOCATION</div>
+                        <div class="section-text" id="infoLocation">South side of campus, enter through ECS, then continue to the 3rd floor lab.</div>
+
+                        <div class="section-label">BUILDING</div>
+                        <div class="section-text">Computer Science Building.</div>
+
+                        <div class="section-label">NAVIGATION FLOW</div>
+                        <div class="amenities">
+                            <span class="tag">Campus</span>
+                            <span class="tag">Floor 1</span>
+                            <span class="tag">Floor 3</span>
+                        </div>
+                    </div>
+                    <button class="primary-btn" id="startPathButton">Start Path →</button>
+                    <button class="secondary-btn" id="walkPathButton" hidden disabled>Walk Path</button>
+                </div>
+            </aside>
+
+            <div class="completion-modal" id="completionModal">
+                <div class="completion-card">
+                    <h3>Path Complete</h3>
+                    <p>You have reached your final destination. Reset navigation and return to the default state?</p>
+                    <button class="primary-btn" id="completeResetButton">Reset Navigation</button>
+                </div>
+            </div>
+
+            <div class="zoom-controls" aria-label="Map zoom controls">
+                <button class="zoom-btn" id="zoomInButton" type="button">+</button>
+                <button class="zoom-btn" id="zoomOutButton" type="button">−</button>
+            </div>
+        </section>
+
+        <p class="helper-copy">
+            <!-- This version uses hard-coded path arrays keyed by building and room. -->
+        </p>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
