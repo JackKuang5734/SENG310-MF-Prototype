@@ -684,8 +684,8 @@ document.addEventListener('click', (event) => {
   }
 });
 
-buildingInput.value = 'ECS';
-roomInput.value = '315';
+buildingInput.value = '';
+roomInput.value = '';
 translateX = 0;
 translateY = 0;
 applyMapTransform();
