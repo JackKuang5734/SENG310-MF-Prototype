@@ -115,6 +115,44 @@ let isWalking = false;
 let unavailableModal = null;
 let clockTimerId = null;
 
+let isPinching = false;
+let lastTouchDistance = 0;
+
+function getContainerCenter() {
+  const rect = mapContainer.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+function setMapScaleAroundPoint(nextScale, clientX, clientY) {
+  const clampedScale = clampScale(nextScale);
+  if (clampedScale === mapScale) return;
+
+  const center = getContainerCenter();
+  const pointX = clientX - center.x;
+  const pointY = clientY - center.y;
+  const mapCoordX = (pointX - translateX) / mapScale;
+  const mapCoordY = (pointY - translateY) / mapScale;
+
+  translateX = pointX - mapCoordX * clampedScale;
+  translateY = pointY - mapCoordY * clampedScale;
+  mapScale = clampedScale;
+  applyMapTransform();
+}
+
+function getTouchDistance(touchA, touchB) {
+  return Math.hypot(touchB.clientX - touchA.clientX, touchB.clientY - touchA.clientY);
+}
+
+function getTouchMidpoint(touchA, touchB) {
+  return {
+    x: (touchA.clientX + touchB.clientX) / 2,
+    y: (touchA.clientY + touchB.clientY) / 2,
+  };
+}
+
 function ensureUnavailableModal() {
   if (unavailableModal) return unavailableModal;
 
@@ -225,8 +263,13 @@ function clampScale(value) {
   return Math.min(2.6, Math.max(0.45, value));
 }
 
-function zoomMap(delta) {
-  mapScale = clampScale(mapScale + delta);
+function zoomMap(delta, clientX = null, clientY = null) {
+  const nextScale = clampScale(mapScale + delta);
+  if (clientX !== null && clientY !== null) {
+    setMapScaleAroundPoint(nextScale, clientX, clientY);
+    return;
+  }
+  mapScale = nextScale;
   applyMapTransform();
 }
 
@@ -508,16 +551,23 @@ buildingInput.addEventListener('keydown', (event) => {
   }
 });
 
-zoomInButton.addEventListener('click', () => zoomMap(0.2));
-zoomOutButton.addEventListener('click', () => zoomMap(-0.2));
+zoomInButton.addEventListener('click', () => {
+  const center = getContainerCenter();
+  zoomMap(0.2, center.x, center.y);
+});
+zoomOutButton.addEventListener('click', () => {
+  const center = getContainerCenter();
+  zoomMap(-0.2, center.x, center.y);
+});
 
 mapContainer.addEventListener('wheel', (event) => {
   event.preventDefault();
   const delta = event.deltaY < 0 ? 0.12 : -0.12;
-  zoomMap(delta);
+  zoomMap(delta, event.clientX, event.clientY);
 }, { passive: false });
 
 mapContainer.addEventListener('pointerdown', (event) => {
+  if (event.pointerType === 'touch' || isPinching) return;
   isDragging = true;
   dragStartX = event.clientX;
   dragStartY = event.clientY;
@@ -527,7 +577,7 @@ mapContainer.addEventListener('pointerdown', (event) => {
 });
 
 mapContainer.addEventListener('pointermove', (event) => {
-  if (!isDragging) return;
+  if (!isDragging || event.pointerType === 'touch') return;
   translateX = startTranslateX + (event.clientX - dragStartX);
   translateY = startTranslateY + (event.clientY - dragStartY);
   applyMapTransform();
@@ -539,6 +589,70 @@ mapContainer.addEventListener('pointerup', () => {
 
 mapContainer.addEventListener('pointercancel', () => {
   isDragging = false;
+});
+
+mapContainer.addEventListener('touchstart', (event) => {
+  if (event.touches.length === 2) {
+    isPinching = true;
+    isDragging = false;
+    lastTouchDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    return;
+  }
+
+  if (event.touches.length === 1) {
+    isPinching = false;
+    isDragging = true;
+    dragStartX = event.touches[0].clientX;
+    dragStartY = event.touches[0].clientY;
+    startTranslateX = translateX;
+    startTranslateY = translateY;
+  }
+}, { passive: true });
+
+mapContainer.addEventListener('touchmove', (event) => {
+  if (event.touches.length === 2) {
+    event.preventDefault();
+    const newDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    if (lastTouchDistance > 0) {
+      const midpoint = getTouchMidpoint(event.touches[0], event.touches[1]);
+      const nextScale = mapScale * (newDistance / lastTouchDistance);
+      setMapScaleAroundPoint(nextScale, midpoint.x, midpoint.y);
+    }
+    lastTouchDistance = newDistance;
+    isPinching = true;
+    isDragging = false;
+    return;
+  }
+
+  if (event.touches.length === 1 && !isPinching) {
+    event.preventDefault();
+    translateX = startTranslateX + (event.touches[0].clientX - dragStartX);
+    translateY = startTranslateY + (event.touches[0].clientY - dragStartY);
+    applyMapTransform();
+  }
+}, { passive: false });
+
+mapContainer.addEventListener('touchend', (event) => {
+  if (event.touches.length < 2) {
+    lastTouchDistance = 0;
+    isPinching = false;
+  }
+
+  if (event.touches.length === 1) {
+    isDragging = true;
+    dragStartX = event.touches[0].clientX;
+    dragStartY = event.touches[0].clientY;
+    startTranslateX = translateX;
+    startTranslateY = translateY;
+  } else {
+    isDragging = false;
+  }
+});
+
+mapContainer.addEventListener('touchcancel', () => {
+  isDragging = false;
+  isPinching = false;
+  lastTouchDistance = 0;
 });
 
 closeInfo.addEventListener('click', () => {
